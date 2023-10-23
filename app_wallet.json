@@ -1,0 +1,8 @@
+{
+  "apps": [
+    {
+      "name": "var-nftee",
+      "script": "dist/main.js"
+    }
+  ]
+}

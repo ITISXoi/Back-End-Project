@@ -1,0 +1,29 @@
+stages:
+  - build
+  - deploy
+
+workflow:
+  rules:
+    - if: $CI_COMMIT_BRANCH == "dev"
+      when: always
+    - when: never
+
+build:
+  stage: build
+  before_script:
+    - cd /var/www/my_works/var_products/nftee
+    - sudo git pull
+  script:
+    - sudo npm run build
+  tags:
+    - backend
+
+deploy:
+  stage: deploy
+  before_script:
+    - cd /var/www/my_works/var_products/nftee
+  script:
+    - sudo pm2 restart 5
+    - sudo pm2 restart 6
+  tags:
+    - backend
