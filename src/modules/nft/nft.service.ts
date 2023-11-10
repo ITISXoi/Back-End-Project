@@ -109,26 +109,26 @@ export class NftService {
       chainId: collection.chainId,
     });
 
-    const collectionControllerContract = smartContract(
-      "./smart-contract/CollectionController.json",
-      "collectionController",
-      currencyConfig,
-      "utf-8"
-    );
-    const hashUniqueNft =
-      "0x" +
-      hashString(
-        data.imageIds.toString() +
-          collection.collectionAddress +
-          collection.chainId
-      );
-    const isNftMint = await collectionControllerContract.methods
-      .isLayerMinted(hashUniqueNft)
-      .call();
+    // const collectionControllerContract = smartContract(
+    //   "./smart-contract/CollectionController.json",
+    //   "collectionController",
+    //   currencyConfig,
+    //   "utf-8"
+    // );
+    // const hashUniqueNft =
+    //   "0x" +
+    //   hashString(
+    //     data.imageIds.toString() +
+    //       collection.collectionAddress +
+    //       collection.chainId
+    //   );
+    // const isNftMint = await collectionControllerContract.methods
+    //   .isLayerMinted(hashUniqueNft)
+    //   .call();
 
-    if (isNftMint) {
-      throw Causes.ERROR_DATA_NFTS;
-    }
+    // if (isNftMint) {
+    //   throw Causes.ERROR_DATA_NFTS;
+    // }
 
     let layerIds = [];
     const images = await this.imageRepository.findByIds(data.imageIds);

@@ -316,7 +316,6 @@ export class AuthController {
     @Req() request: RequestWithUser,
     @UploadedFiles() files: { image?: Express.Multer.File[] }
   ): Promise<CreatePartnershipRes | EmptyObject> {
-    console.log("Hhahaah");
     // if (!request || !request.user) throw Causes.USER_DONT_HAVE_PERMISSION;
     // const checkPermission = await this.authService.checkPermissionUser(
     //     request.user

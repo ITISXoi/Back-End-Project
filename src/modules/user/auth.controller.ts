@@ -9,11 +9,12 @@ import {
     Req,
     Res,
     UploadedFile,
+    UploadedFiles,
     UseGuards,
     UseInterceptors
 } from '@nestjs/common';
-import {FileInterceptor} from "@nestjs/platform-express";
-import {ApiOperation, ApiQuery, ApiResponse} from '@nestjs/swagger';
+import {FileFieldsInterceptor, FileInterceptor} from "@nestjs/platform-express";
+import {ApiConsumes, ApiOperation, ApiQuery, ApiResponse} from '@nestjs/swagger';
 import {AuthService} from './auth.service';
 import {Login} from './request/login.dto';
 import {ResetPassword} from './request/reset-password.dto';
@@ -34,6 +35,7 @@ import {JwtService} from '@nestjs/jwt';
 import {User} from '../../database/entities';
 import {PaginationResponse} from 'src/config/rest/paginationResponse';
 import {SendMailResetPassword} from './request/sendMailResetPassword.dto';
+import { checkImage } from 'src/shared/Utils';
 @Controller('user')
 export class AuthController {
     constructor(
@@ -116,6 +118,8 @@ export class AuthController {
 
     @Post('/update-profile')
     @UseGuards(JwtAuthGuard)
+    @UseInterceptors(FileFieldsInterceptor([{ name: "image", maxCount: 1 }]))
+    @ApiConsumes("multipart/form-data")
     @ApiOperation({
         tags: ['auth'],
         operationId: 'update profile',
@@ -127,11 +131,18 @@ export class AuthController {
         description: 'Successful',
         type: RegisterBase,
     })
-    async updateProfile(@Body() data: any, @Req() request: RequestWithUser): Promise<any | EmptyObject> {
+    async updateProfile(
+        @Body() data: any, 
+        @Req() request: RequestWithUser,
+        @UploadedFiles() files: { image?: Express.Multer.File[] }
+    ): Promise<any | EmptyObject> {
         if (!request || !request.user) throw Causes.USER_NOT_ACCESS;
 
         const user = request.user;
-        const userUpdate = await this.authService.updateProfile(user, data);
+        let image = files && files.image ? files.image[0] : undefined;
+
+        if (image) await checkImage(image);
+        const userUpdate = await this.authService.updateProfile(user, data, { image });
 
         if (!userUpdate) throw Causes.DATA_INVALID;
 

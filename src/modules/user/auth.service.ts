@@ -1,16 +1,16 @@
 import { Injectable } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
-import { LoginResponse } from "./response/login.dto";
-import { SendMailResetPassword } from "./request/sendMailResetPassword.dto";
-import * as argon2 from "argon2";
-import { User } from "../../database/entities";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Register } from "./request/register.dto";
+import * as argon2 from "argon2";
+import { S3 } from "aws-sdk";
+import { IPaginationOptions } from "nestjs-typeorm-paginate";
+import { Repository } from "typeorm";
+import { User } from "../../database/entities";
 import { convertToObject, encrypt } from "../../shared/Utils";
 import { MailService } from "../mail/mail.service";
-import { IPaginationOptions } from "nestjs-typeorm-paginate";
-import { getArrayPaginationBuildTotal } from "src/shared/Utils";
-import { getConnection, Repository } from "typeorm";
+import { Register } from "./request/register.dto";
+import { SendMailResetPassword } from "./request/sendMailResetPassword.dto";
+import { LoginResponse } from "./response/login.dto";
 
 var tokenMap = new Map();
 var limitRequestLoginMap = new Map();
@@ -23,7 +23,35 @@ export class AuthService {
     @InjectRepository(User)
     private usersRepository: Repository<User>
   ) {}
+  async upload(file): Promise<any> {
+    const { originalname } = file;
+    const bucketS3 = process.env.AWS_BUCKET;
+    return await this.uploadS3(file.buffer, bucketS3, originalname);
+  }
 
+  async uploadS3(file, bucket, name) {
+    const s3 = this.getS3();
+    const params = {
+      Bucket: bucket,
+      Key: "collections/" + String(name),
+      Body: file,
+    };
+    return new Promise((resolve, reject) => {
+      s3.upload(params, (err, data) => {
+        if (err) {
+          reject(err.message);
+        }
+        return resolve(data);
+      });
+    });
+  }
+
+  getS3() {
+    return new S3({
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    });
+  }
   //login
   async validateUser(data: any): Promise<any> {
     const user = await this.getUserByEmail(data.email);
@@ -123,12 +151,23 @@ export class AuthService {
     return duplicatedUser;
   }
 
-  async updateProfile(user: User, data: any) {
+  async updateProfile(user: User, data: any, files?: any) {
     if (!user || !user.email || !data) return false;
 
     let dataUser = await this.getUserByEmail(user.email);
 
     if (!dataUser) return false;
+    let imageUrl;
+    console.log('files', files)
+    if (files) {
+        if (files.image) {
+            const imageUpload = await this.upload(files.image);
+
+            if (!imageUpload || !imageUpload.Location) return false;
+            imageUrl = imageUpload.Location;
+        }
+    }
+    console.log('imageUrl', imageUrl)
 
     for (const [key, value] of Object.entries(data)) {
       if (
@@ -151,7 +190,9 @@ export class AuthService {
         dataUser[key] = value;
       }
     }
-
+    if(imageUrl) {
+      dataUser.avatarUrl = imageUrl
+    }
     dataUser = await this.usersRepository.save(dataUser);
 
     const { password, token, twoFactorAuthenticationSecret, ...dataReturn } =
