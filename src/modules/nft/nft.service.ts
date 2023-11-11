@@ -938,6 +938,13 @@ export class NftService {
             collection.id = nft_offchain.collection_key_id
             `
       )
+      .leftJoin(
+        User,
+        "user",
+        `
+            user.id = nft_offchain.creatorId
+            `
+      )
       .select(
         `
             nft_offchain.id, nft_offchain.type, nft_offchain.collection_id as collectionId,
@@ -952,7 +959,14 @@ export class NftService {
             nft_offchain.creatorId as creatorId, nft_offchain.updated_at as updatedAt
             `
       )
-      .addSelect(`collection.id as collectionKeyId`)
+      .addSelect(
+        `collection.id as collectionKeyId,
+                  collection.image_url as collectionImageUrl`
+      )
+      .addSelect(
+        `user.username as creatorUserName,
+        user.avatar_url as creatorImageUrl`
+      )
       .where(`nft_offchain.id = :id`, { id })
       .getRawOne();
     const images = await getConnection()
