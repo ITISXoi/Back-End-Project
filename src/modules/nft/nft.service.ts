@@ -151,7 +151,7 @@ export class NftService {
     nftOffchain.imageIds = data.imageIds.toString();
     nftOffchain.collectionName = collection.name;
     nftOffchain.name = data.name;
-    nftOffchain.slug = data.name;
+    nftOffchain.slug = data.slug;
     nftOffchain.description = data.description;
     nftOffchain.imageUrl = urlImage;
     nftOffchain.imageType = files[0].mimetype ? files[0].mimetype : null;
