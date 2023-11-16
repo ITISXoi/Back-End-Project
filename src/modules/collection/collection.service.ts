@@ -11,7 +11,10 @@ import {
 } from "../../database/entities";
 import { getConnection, Repository } from "typeorm";
 import { IPaginationOptions } from "nestjs-typeorm-paginate";
-import { PaginationResponse } from "src/config/rest/paginationResponse";
+import {
+  PaginationResponse,
+  Response,
+} from "src/config/rest/paginationResponse";
 import { getArrayPaginationBuildTotal } from "src/shared/Utils";
 import { S3 } from "aws-sdk";
 import axios from "axios";
@@ -442,6 +445,7 @@ export class CollectionService {
   async publicCollection(id: number) {
     const collection = await this.collectionRepo.findOne(id);
     collection.isPublic = true;
+    collection.collectionId = id;
     collection.status = "Publish";
     logger.info(collection);
     log(collection, "collection");
@@ -455,6 +459,8 @@ export class CollectionService {
   async createDraftCollection(id: number) {
     const collection = await this.collectionRepo.findOne(id);
     collection.isCreateDraft = true;
+    collection.collectionId = id;
+    console.log("collection", collection);
 
     if (!collection) {
       throw Causes.DATA_INVALID;
@@ -1316,12 +1322,28 @@ export class CollectionService {
   getOffset(paginationOptions: IPaginationOptions) {
     let offset = 0;
     if (paginationOptions.page && paginationOptions.limit) {
-      if (paginationOptions.page > 0) {
+      if (Number(paginationOptions.page) > 0) {
         offset =
           (Number(paginationOptions.page) - 1) *
           Number(paginationOptions.limit);
       }
     }
     return offset;
+  }
+  async getAllCollection(): Promise<Response<Collection>> {
+    let queryBuilder = getConnection()
+      .createQueryBuilder(Collection, "collection")
+      .select("collection.id as id, collection.name as name")
+      .where("collection.is_public = 1")
+      .orderBy("collection.id", "ASC");
+    let queryCount = getConnection()
+      .createQueryBuilder(Collection, "collection")
+      .select(" Count (1) as Total")
+      .orderBy("collection.updated_at", "DESC");
+
+    const collection = await queryBuilder.execute();
+    return {
+      results: collection,
+    };
   }
 }

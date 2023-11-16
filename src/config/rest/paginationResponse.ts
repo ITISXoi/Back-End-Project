@@ -1,13 +1,21 @@
-import {Pagination} from './pagination';
+import { Pagination } from "./pagination";
 
 export class PaginationResponse<T> {
-    pagination: Pagination;
+  pagination: Pagination;
 
-    results: Array<T>;
+  results: Array<T>;
 
-    constructor(results: Array<T>, pagination: Pagination) {
-        this.results = results;
+  constructor(results: Array<T>, pagination: Pagination) {
+    this.results = results;
 
-        this.pagination = pagination;
-    }
+    this.pagination = pagination;
+  }
+}
+
+export class Response<T> {
+  results: Array<T>;
+
+  constructor(results: Array<T>, pagination: Pagination) {
+    this.results = results;
+  }
 }

@@ -1031,7 +1031,9 @@ export class NftService {
     if (params.collectionKeyId) {
       queryBuilder.andWhere(
         `nft_offchain.collection_key_id = :collectionKeyId`,
-        { collectionKeyId: params.collectionKeyId }
+        {
+          collectionKeyId: params.collectionKeyId,
+        }
       );
       queryCount.andWhere(`nft_offchain.collection_key_id = :collectionKeyId`, {
         collectionKeyId: params.collectionKeyId,
