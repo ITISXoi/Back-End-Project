@@ -84,7 +84,7 @@ export class NftController {
   }
 
   @Post("/create")
-  // @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard)
   @UseInterceptors(FilesInterceptor("images"))
   @ApiOperation({
     tags: ["nft"],
@@ -103,6 +103,7 @@ export class NftController {
     @UploadedFiles() files: Array<Express.Multer.File>,
     @Req() request: any
   ) {
+
     if (!request || !request.user) throw Causes.USER_DONT_HAVE_PERMISSION;
     if (!files || files.length == 0) throw Causes.DATA_INVALID;
 
@@ -145,9 +146,9 @@ export class NftController {
   ) {
     console.log("request", request.user);
     if (!request || !request.user) throw Causes.USER_DONT_HAVE_PERMISSION;
-    console.log('heheeh')
+    console.log("heheeh");
     if (!files || files.length == 0) throw Causes.DATA_INVALID;
-    console.log('hahaha')
+    console.log("hahaha");
 
     for (let file of files) {
       if (
@@ -160,7 +161,7 @@ export class NftController {
 
       await checkImage(file);
     }
-    console.log('huhuhuh2')
+    console.log("huhuhuh2");
 
     const nftOffchain = await this.nftService.createOffchain(
       data,
@@ -169,7 +170,7 @@ export class NftController {
       request.user
     );
     if (!nftOffchain) throw Causes.NFT_OFFCHAIN_CREATE_FAILED;
-    console.log('124124124')
+    console.log("124124124");
 
     return nftOffchain;
   }

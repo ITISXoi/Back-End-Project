@@ -243,6 +243,8 @@ export class NftService {
       throw Causes.IMAGE_IDS_FORMAT_IS_INVALID;
     }
 
+    console.log(43333333333);
+
     data.imageIds = JSON.parse(data.imageIds.toString());
     const currencyConfig = await this.currencyConfigRepository.findOne({
       chainId: collection.chainId,
@@ -254,6 +256,7 @@ export class NftService {
       currencyConfig,
       "utf-8"
     );
+    console.log(55555555555);
     const hashUniqueNft =
       "0x" +
       hashString(
@@ -261,24 +264,28 @@ export class NftService {
           collection.collectionAddress +
           collection.chainId
       );
+    console.log(hashUniqueNft, 'heheh', currencyConfig);
     const isNftMint = await collectionControllerContract.methods
       .isLayerMinted(hashUniqueNft)
       .call();
 
+    console.log(6666666666);
     if (isNftMint) {
       throw Causes.ERROR_DATA_NFTS;
     }
 
     // upload primary image to ipfs
-    const dataIpfs = await this.uploadOnIpfs(files[0]);
+    const dataIpfs = await this.uploadOnIpfs('files[0]');
     if (!dataIpfs) throw Causes.ERROR_IPFS;
 
     // upload other images to aws s3
     const urlImage = await this.uploadOnS3(files[0]);
+    console.log(777777777);
 
     let layerIds = [];
 
     const images = await this.imageRepository.findByIds(data.imageIds);
+    console.log(123465555);
 
     if (!images.length || !images) {
       throw Causes.IMAGE_IDS_IS_EMPTY;
@@ -356,7 +363,7 @@ export class NftService {
       // Save a draft for mint nft fail case
       await this.nftOffchainRepository.save(nftOffchain);
     }
-    log("!21212122121");
+    console.log("!21212122121");
     nft = await this.nftRepository.save(nft);
 
     const fileName = await this.createJsonFile(data, nft, dataIpfs);
