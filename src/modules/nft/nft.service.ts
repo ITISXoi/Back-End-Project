@@ -88,9 +88,11 @@ export class NftService {
       });
     } else if (type == NftOffChainType.DRAFT) {
       collection = await this.collectionRepository.findOne({
-        collectionId: data.collectionId,
+        id: data.collectionId,
       });
+      console.log("collection1", collection);
     }
+    console.log("collection2", collection);
 
     if (!collection) {
       throw Causes.COLLECTION_NOT_EXISTS;
@@ -223,6 +225,8 @@ export class NftService {
   }
 
   async create(data: Create, files: any, creator: User) {
+    console.log("data", data);
+
     const collection = await this.collectionRepository.findOne({
       collectionId: data.collectionId,
       chainId: data.chainId,
@@ -264,7 +268,7 @@ export class NftService {
           collection.collectionAddress +
           collection.chainId
       );
-    console.log(hashUniqueNft, 'heheh', currencyConfig);
+    console.log(hashUniqueNft, "heheh", currencyConfig);
     const isNftMint = await collectionControllerContract.methods
       .isLayerMinted(hashUniqueNft)
       .call();
@@ -275,7 +279,7 @@ export class NftService {
     }
 
     // upload primary image to ipfs
-    const dataIpfs = await this.uploadOnIpfs('files[0]');
+    const dataIpfs = await this.uploadOnIpfs(files[0]);
     if (!dataIpfs) throw Causes.ERROR_IPFS;
 
     // upload other images to aws s3
@@ -932,7 +936,64 @@ export class NftService {
   }
 
   async getDetailNft(id: number) {
-    return this.nftRepository.findOne(id);
+    let nftOnChain = await getConnection()
+      .createQueryBuilder(Nft, "nft")
+      .leftJoin(
+        Collection,
+        "collection",
+        `
+            collection.id = nft.collection_id
+            `
+      )
+      .leftJoin(
+        User,
+        "user",
+        `
+            user.id = nft.creatorId
+            `
+      )
+      .select(
+        `
+            nft.id, nft.collection_id as collectionId,
+            nft.layer_ids as layerIds, nft.image_ids as imageIds,
+            nft.collection_name as collectionName, nft.name as name,
+            nft.slug as slug, nft.price as price,
+            nft.image_url as imageUrl, nft.description as description,
+            nft.note as note, nft.attributes as attributes,
+            nft.image_type as imageType, nft.image_type as imageType,
+            nft.image_type as imageType, nft.image_type as imageType,
+            nft.creatorId as creatorId, nft.updated_at as updatedAt
+            `
+      )
+      .addSelect(
+        `collection.id as collectionKeyId,
+                  collection.image_url as collectionImageUrl`
+      )
+      .addSelect(
+        `user.username as creatorUserName,
+        user.avatar_url as creatorImageUrl`
+      )
+      .where(`nft.id = :id`, { id })
+      .getRawOne();
+    const images = await getConnection()
+      .createQueryBuilder(Image, "image")
+      .leftJoin(Layer, "layer", "image.layer_id = layer.id")
+      .select(
+        `
+            image.id as id, image.image_url as imageUrl, image.name as name,
+            image.description as description, image.image_type as imageType,
+            image.quantity as quantity, image.remaining_quantity as remainingQuantity,
+            image.probability as probability, image.price as price,
+            image.contract_price as contractPrice, image.percent as percent,
+            image.is_minted as isMinted, image.created_at as createdAt,
+            image.layer_id as layerId, image.updated_at as updatedAt,
+            layer.layer_index as layerIndex, layer.name as layerName
+            `
+      )
+      .where(`image.id in (${(await nftOnChain).imageIds})`)
+      .getRawMany();
+    nftOnChain.images = images;
+    return nftOnChain;
   }
 
   async getDetailNftOffchain(id: number) {

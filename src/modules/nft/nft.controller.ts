@@ -525,7 +525,7 @@ export class NftController {
     status: HttpStatus.OK,
     description: "Successful",
   })
-  async getDetailNft(@Req() request: RequestWithUser, @Param("id") id: number) {
+  async getDetailNft(@Req() request: RequestWithUser, @Param("id") id: number) {    
     const nft = await this.nftService.getDetailNft(id);
     if (!nft) {
       throw Causes.NFT_DOES_NOT_EXIST;
