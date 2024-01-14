@@ -942,7 +942,7 @@ export class NftService {
         Collection,
         "collection",
         `
-            collection.id = nft.collection_id
+            collection.collection_id = nft.collection_id
             `
       )
       .leftJoin(
@@ -962,7 +962,8 @@ export class NftService {
             nft.note as note, nft.attributes as attributes,
             nft.image_type as imageType, nft.image_type as imageType,
             nft.image_type as imageType, nft.image_type as imageType,
-            nft.creatorId as creatorId, nft.updated_at as updatedAt
+            nft.creatorId as creatorId, nft.updated_at as updatedAt,
+            nft.owner as owner
             `
       )
       .addSelect(
